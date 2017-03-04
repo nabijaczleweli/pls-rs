@@ -1,0 +1,13 @@
+[package]
+name = "pls"
+description = "Parser for the PLS playlist format"
+documentation = "https://cdn.rawgit.com/nabijaczleweli/pls-rs/doc/pls/index.html"
+repository = "https://github.com/nabijaczleweli/pls-rs"
+readme = "README.md"
+keywords = ["music", "playlist", "pls", "parse"]
+categories = ["parser-implementations"]
+license = "MIT"
+# Remember to also update in appveyor.yml
+version = "0.1.0"
+authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
+exclude = ["*.enc"]
