@@ -1,3 +1,75 @@
+//! Parser and writer for the [`PLS` playlist format](https://en.wikipedia.org/wiki/PLS_(file_format)).
+//!
+//! # Examples
+//!
+//! Reading PLS':
+//!
+//! ```
+//! # use pls::{PlaylistElement, ElementLength};
+//! assert_eq!(pls::parse(&mut &b"[playlist]\n\
+//!                               File1=Track 1.mp3\n\
+//!                               Title1=Unknown Artist - Track 1\n\
+//!                               \n\
+//!                               File2=Track 2.mp3\n\
+//!                               Length2=420\n\
+//!                               \n\
+//!                               File3=Track 3.mp3\n\
+//!                               Length3=-1\n\
+//!                               \n\
+//!                               NumberOfEntries=3\n"[..]).unwrap(),
+//!            vec![PlaylistElement {
+//!                path: "Track 1.mp3".to_string(),
+//!                title: Some("Unknown Artist - Track 1".to_string()),
+//!                len: ElementLength::Unknown,
+//!            },
+//!            PlaylistElement {
+//!                path: "Track 2.mp3".to_string(),
+//!                title: None,
+//!                len: ElementLength::Seconds(420),
+//!            },
+//!            PlaylistElement {
+//!                path: "Track 3.mp3".to_string(),
+//!                title: None,
+//!                len: ElementLength::Unknown,
+//!            }]);
+//! ```
+//!
+//! Writing PLS':
+//!
+//! ```
+//! # use pls::{PlaylistElement, ElementLength};
+//! let mut buf = Vec::new();
+//! pls::write([PlaylistElement {
+//!                path: "Track 1.mp3".to_string(),
+//!                title: Some("Unknown Artist - Track 1".to_string()),
+//!                len: ElementLength::Unknown,
+//!            },
+//!            PlaylistElement {
+//!                path: "Track 2.mp3".to_string(),
+//!                title: None,
+//!                len: ElementLength::Seconds(420),
+//!            },
+//!            PlaylistElement {
+//!                path: "Track 3.mp3".to_string(),
+//!                title: None,
+//!                len: ElementLength::Unknown,
+//!            }].iter(),
+//!            &mut buf).unwrap();
+//! assert_eq!(String::from_utf8(buf).unwrap(),
+//!            "[playlist]\n\
+//!             File1=Track 1.mp3\n\
+//!             Title1=Unknown Artist - Track 1\n\
+//!             \n\
+//!             File2=Track 2.mp3\n\
+//!             Length2=420\n\
+//!             \n\
+//!             File3=Track 3.mp3\n\
+//!             \n\
+//!             NumberOfEntries=3\n\
+//!             Version=2\n")
+//! ```
+
+
 extern crate ini as _ini;
 
 use std::io::{self, Write, Read};
@@ -7,29 +79,125 @@ use _ini::ini;
 use std::fmt;
 
 
+/// A single element of a playlist
+///
+/// # Examples
+///
+/// ```
+/// # use pls::{PlaylistElement, ElementLength};
+/// # use std::io;
+/// # struct File { d: &'static [u8] };
+/// # impl File {
+/// #     fn open(_: &str) -> File { File { d: &b"[playlist]\n\
+/// #                                             File1=Track 1.mp3\n\
+/// #                                             Title1=Unknown Artist - Track 1\n\
+/// #                                             Length1=420\n\
+/// #                                             \n\
+/// #                                             NumberOfEntries=1\n\
+/// #                                             Version=2\n"[..] } }
+/// # }
+/// # impl io::Read for File {
+/// #     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.d.read(buf) }
+/// # }
+/// let elements = pls::parse(&mut File::open("Unknown Artist.pls")).unwrap();
+/// # assert_eq!(elements,
+/// #            vec![PlaylistElement {
+/// #                path: "Track 1.mp3".to_string(),
+/// #                title: Some("Unknown Artist - Track 1".to_string()),
+/// #                len: ElementLength::Seconds(420),
+/// #            }]);
+/// ```
+///
+/// ```
+/// # use pls::{PlaylistElement, ElementLength};
+/// # use std::io;
+/// # struct File { f: () };
+/// # impl File {
+/// #     fn create(_: &str) -> File { File { f: () } }
+/// # }
+/// # impl io::Write for File {
+/// #     fn write(&mut self, buf: &[u8]) -> io::Result<usize> { Ok(buf.len()) }
+/// #     fn flush(&mut self) -> io::Result<()> { Ok(()) }
+/// # }
+/// pls::write([PlaylistElement {
+///                path: "Track 1.mp3".to_string(),
+///                title: Some("Unknown Artist - Track 1".to_string()),
+///                len: ElementLength::Seconds(420),
+///            }].iter(),
+///            &mut File::create("Unknown Artist.pls")).unwrap();
+/// ```
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PlaylistElement {
+    /// Path specified in the `File#` key, unconstrained
     pub path: String,
+    /// Title specified by the `Title#` key or `None` if omitted
     pub title: Option<String>,
+    /// Length specified by the `Length#` key or `Unknown` if omitted
     pub len: ElementLength,
 }
 
+/// Playlist element's length
+///
+/// `Unknown` if omitted or set to `-1`
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ElementLength {
+    /// Length was specified in `Length#` field
     Seconds(u64),
+    /// Length was omitted or set to `-1`
     Unknown,
 }
 
+/// All ways parsing can fail
 #[derive(Debug)]
 pub enum ParseError {
+    /// Specified version was not `2`
     InvalidVersion(u64),
+    /// The whole `[playlist]` section's missing
     MissingPlaylistSection,
+    /// Some required key is missing
     MissingKey(String),
+    /// An integer was not actually an integer
     InvalidInteger(ParseIntError),
+    /// Other `.ini` parsing errors
     Ini(ini::Error),
 }
 
 
+/// Parse a playlist
+///
+/// The parser is very lenient and allows pretty much everything as long as the required stuff's in.
+///
+/// # Examples
+///
+/// ```
+/// # use pls::{PlaylistElement, ElementLength};
+/// assert_eq!(pls::parse(&mut &b"[playlist]\n\
+///                               File1=Track 1.mp3\n\
+///                               Title1=Unknown Artist - Track 1\n\
+///                               \n\
+///                               File2=Track 2.mp3\n\
+///                               Length2=420\n\
+///                               \n\
+///                               File3=Track 3.mp3\n\
+///                               Length3=-1\n\
+///                               \n\
+///                               NumberOfEntries=3\n"[..]).unwrap(),
+///            vec![PlaylistElement {
+///                path: "Track 1.mp3".to_string(),
+///                title: Some("Unknown Artist - Track 1".to_string()),
+///                len: ElementLength::Unknown,
+///            },
+///            PlaylistElement {
+///                path: "Track 2.mp3".to_string(),
+///                title: None,
+///                len: ElementLength::Seconds(420),
+///            },
+///            PlaylistElement {
+///                path: "Track 3.mp3".to_string(),
+///                title: None,
+///                len: ElementLength::Unknown,
+///            }]);
+/// ```
 pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> {
     let p = try!(ini::Ini::read_from(what));
     let play = try!(p.section(Some("playlist")).ok_or(ParseError::MissingPlaylistSection));
@@ -47,7 +215,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
         for i in 1..e + 1 {
             elems.push(PlaylistElement {
                 path: try!(play.get(&format!("File{}", i)).ok_or_else(|| ParseError::MissingKey(format!("File{}", i)))).clone(),
-                title: play.get(&format!("Title{}", i)).map(Clone::clone),
+                title: play.get(&format!("Title{}", i)).cloned(),
                 len: try!(ElementLength::parse(play.get(&format!("Length{}", i)))),
             })
         }
@@ -57,6 +225,42 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
     }
 }
 
+/// Write a playlist to the specified output stream
+///
+/// # Examples
+///
+/// ```
+/// # use pls::{PlaylistElement, ElementLength};
+/// let mut buf = Vec::new();
+/// pls::write([PlaylistElement {
+///                path: "Track 1.mp3".to_string(),
+///                title: Some("Unknown Artist - Track 1".to_string()),
+///                len: ElementLength::Unknown,
+///            },
+///            PlaylistElement {
+///                path: "Track 2.mp3".to_string(),
+///                title: None,
+///                len: ElementLength::Seconds(420),
+///            },
+///            PlaylistElement {
+///                path: "Track 3.mp3".to_string(),
+///                title: None,
+///                len: ElementLength::Unknown,
+///            }].iter(),
+///            &mut buf).unwrap();
+/// assert_eq!(String::from_utf8(buf).unwrap(),
+///            "[playlist]\n\
+///             File1=Track 1.mp3\n\
+///             Title1=Unknown Artist - Track 1\n\
+///             \n\
+///             File2=Track 2.mp3\n\
+///             Length2=420\n\
+///             \n\
+///             File3=Track 3.mp3\n\
+///             \n\
+///             NumberOfEntries=3\n\
+///             Version=2\n")
+/// ```
 pub fn write<'i, I: Iterator<Item = &'i PlaylistElement>, W: Write>(what: I, to: &mut W) -> io::Result<()> {
     try!(writeln!(to, "[playlist]"));
 
