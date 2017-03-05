@@ -39,7 +39,7 @@
 //! ```
 //! # use pls::{PlaylistElement, ElementLength};
 //! let mut buf = Vec::new();
-//! pls::write([PlaylistElement {
+//! pls::write(&[PlaylistElement {
 //!                path: "Track 1.mp3".to_string(),
 //!                title: Some("Unknown Artist - Track 1".to_string()),
 //!                len: ElementLength::Unknown,
@@ -53,7 +53,7 @@
 //!                path: "Track 3.mp3".to_string(),
 //!                title: None,
 //!                len: ElementLength::Unknown,
-//!            }].iter(),
+//!            }],
 //!            &mut buf).unwrap();
 //! assert_eq!(String::from_utf8(buf).unwrap(),
 //!            "[playlist]\n\
@@ -119,11 +119,11 @@ use std::fmt;
 /// #     fn write(&mut self, buf: &[u8]) -> io::Result<usize> { Ok(buf.len()) }
 /// #     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 /// # }
-/// pls::write([PlaylistElement {
+/// pls::write(&[PlaylistElement {
 ///                path: "Track 1.mp3".to_string(),
 ///                title: Some("Unknown Artist - Track 1".to_string()),
 ///                len: ElementLength::Seconds(420),
-///            }].iter(),
+///            }],
 ///            &mut File::create("Unknown Artist.pls")).unwrap();
 /// ```
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -232,7 +232,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
 /// ```
 /// # use pls::{PlaylistElement, ElementLength};
 /// let mut buf = Vec::new();
-/// pls::write([PlaylistElement {
+/// pls::write(&[PlaylistElement {
 ///                path: "Track 1.mp3".to_string(),
 ///                title: Some("Unknown Artist - Track 1".to_string()),
 ///                len: ElementLength::Unknown,
@@ -246,7 +246,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
 ///                path: "Track 3.mp3".to_string(),
 ///                title: None,
 ///                len: ElementLength::Unknown,
-///            }].iter(),
+///            }],
 ///            &mut buf).unwrap();
 /// assert_eq!(String::from_utf8(buf).unwrap(),
 ///            "[playlist]\n\
@@ -261,7 +261,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
 ///             NumberOfEntries=3\n\
 ///             Version=2\n")
 /// ```
-pub fn write<'i, I: Iterator<Item = &'i PlaylistElement>, W: Write>(what: I, to: &mut W) -> io::Result<()> {
+pub fn write<'i, I: IntoIterator<Item = &'i PlaylistElement>, W: Write>(what: I, to: &mut W) -> io::Result<()> {
     try!(writeln!(to, "[playlist]"));
 
     let mut ent = 0u64;
