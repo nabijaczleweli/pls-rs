@@ -1,6 +1,6 @@
 [package]
 name = "pls"
-description = "Parser for the PLS playlist format"
+description = "Parser and writer for the PLS playlist format"
 documentation = "https://cdn.rawgit.com/nabijaczleweli/pls-rs/doc/pls/index.html"
 repository = "https://github.com/nabijaczleweli/pls-rs"
 readme = "README.md"
@@ -11,3 +11,7 @@ license = "MIT"
 version = "0.1.0"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>"]
 exclude = ["*.enc"]
+
+
+[dependencies]
+rust-ini = "0.10"
