@@ -47,8 +47,40 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a class='srclink' href='../src/pls/lib.rs.html#33-58' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn parse&lt;R:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/std/io/trait.Read.html' title='std::io::Read'>Read</a>&gt;(what: &amp;mut R) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../pls/struct.PlaylistElement.html' title='pls::PlaylistElement'>PlaylistElement</a>&gt;, <a class='enum' href='../pls/enum.ParseError.html' title='pls::ParseError'>ParseError</a>&gt;</pre></section>
+               </span><a class='srclink' href='../src/pls/lib.rs.html#201-226' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn parse&lt;R:&nbsp;<a class='trait' href='https://doc.rust-lang.org/nightly/std/io/trait.Read.html' title='std::io::Read'>Read</a>&gt;(what: &amp;mut R) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../pls/struct.PlaylistElement.html' title='pls::PlaylistElement'>PlaylistElement</a>&gt;, <a class='enum' href='../pls/enum.ParseError.html' title='pls::ParseError'>ParseError</a>&gt;</pre><div class='docblock'><p>Parse a playlist</p>
+
+<p>The parser is very lenient and allows pretty much everything as long as the required stuff&#39;s in.</p>
+
+<h1 id='examples' class='section-header'><a href='#examples'>Examples</a></h1>
+<pre class='rust rust-example-rendered'>
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>pls</span>::<span class='ident'>parse</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='kw-2'>&amp;</span><span class='string'>b&quot;[playlist]\n\
+                              File1=Track 1.mp3\n\
+                              Title1=Unknown Artist - Track 1\n\
+                              \n\
+                              File2=Track 2.mp3\n\
+                              Length2=420\n\
+                              \n\
+                              File3=Track 3.mp3\n\
+                              Length3=-1\n\
+                              \n\
+                              NumberOfEntries=3\n&quot;</span>[..]).<span class='ident'>unwrap</span>(),
+           <span class='macro'>vec</span><span class='macro'>!</span>[<span class='ident'>PlaylistElement</span> {
+               <span class='ident'>path</span>: <span class='string'>&quot;Track 1.mp3&quot;</span>.<span class='ident'>to_string</span>(),
+               <span class='ident'>title</span>: <span class='prelude-val'>Some</span>(<span class='string'>&quot;Unknown Artist - Track 1&quot;</span>.<span class='ident'>to_string</span>()),
+               <span class='ident'>len</span>: <span class='ident'>ElementLength</span>::<span class='ident'>Unknown</span>,
+           },
+           <span class='ident'>PlaylistElement</span> {
+               <span class='ident'>path</span>: <span class='string'>&quot;Track 2.mp3&quot;</span>.<span class='ident'>to_string</span>(),
+               <span class='ident'>title</span>: <span class='prelude-val'>None</span>,
+               <span class='ident'>len</span>: <span class='ident'>ElementLength</span>::<span class='ident'>Seconds</span>(<span class='number'>420</span>),
+           },
+           <span class='ident'>PlaylistElement</span> {
+               <span class='ident'>path</span>: <span class='string'>&quot;Track 3.mp3&quot;</span>.<span class='ident'>to_string</span>(),
+               <span class='ident'>title</span>: <span class='prelude-val'>None</span>,
+               <span class='ident'>len</span>: <span class='ident'>ElementLength</span>::<span class='ident'>Unknown</span>,
+           }]);</pre>
+</div></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>

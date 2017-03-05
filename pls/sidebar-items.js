@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["ElementLength",""],["ParseError",""]],"fn":[["parse",""],["write",""]],"struct":[["PlaylistElement",""]]});
+initSidebarItems({"enum":[["ElementLength","Playlist element's length"],["ParseError","All ways parsing can fail"]],"fn":[["parse","Parse a playlist"],["write","Write a playlist to the specified output stream"]],"struct":[["PlaylistElement","A single element of a playlist"]]});
