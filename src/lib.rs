@@ -9,9 +9,9 @@ use std::fmt;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PlaylistElement {
-    path: String,
-    title: Option<String>,
-    len: ElementLength,
+    pub path: String,
+    pub title: Option<String>,
+    pub len: ElementLength,
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
