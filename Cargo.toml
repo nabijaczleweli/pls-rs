@@ -1,7 +1,7 @@
 [package]
 name = "pls"
 description = "Parser and writer for the PLS playlist format"
-documentation = "https://cdn.rawgit.com/nabijaczleweli/pls-rs/doc/pls/index.html"
+documentation = "https://rawcdn.githack.com/nabijaczleweli/pls-rs/doc/pls/index.html"
 repository = "https://github.com/nabijaczleweli/pls-rs"
 readme = "README.md"
 keywords = ["music", "playlist", "pls", "parse"]
