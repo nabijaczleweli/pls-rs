@@ -209,7 +209,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
         }
     }
 
-    if let Some(e) = play.get("NumberOfEntries") {
+    if let Some(e) = play.get("NumberOfEntries").or(play.get("numberofentries")) {
         let e: u64 = try!(e.parse());
         let mut elems = Vec::with_capacity(e as usize);
         for i in 1..e + 1 {
@@ -221,7 +221,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
         }
         Ok(elems)
     } else {
-        Err(ParseError::MissingKey("NumberOfEntries".to_string()))
+        Err(ParseError::MissingKey("NumberOfEntries|numberofentries".to_string()))
     }
 }
 
