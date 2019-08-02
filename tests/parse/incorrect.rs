@@ -32,7 +32,7 @@ fn missing_playlist_section() {
 fn missing_number_of_entries() {
     assert_eq!(parse(&mut &b"[playlist]\n\
                              File1=S:/M J U Z I K/pobrany/A-F-R-O & NGHTMRE - Stronger.mp3\n"[..]),
-               Err(ParseError::MissingKey("NumberOfEntries".to_string())));
+               Err(ParseError::MissingKey("NumberOfEntries|numberofentries".to_string())));
 }
 
 #[test]
