@@ -209,7 +209,10 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
         }
     }
 
-    if let Some(e) = play.get("NumberOfEntries").or_else(|| play.get("numberofentries")) {
+    // Some major radio stations have malformed pls files, handle without error:
+    // "numberofentries" http://newmedia.kcrw.com/legacy/pls/kcrwsimulcast.pls
+    // "NumberOfEvents" http://www.abc.net.au/res/streaming/audio/mp3/classic_fm.pls
+    if let Some(e) = play.get("NumberOfEntries").or_else(|| play.get("numberofentries")).or_else(|| play.get("NumberOfEvents")) {
         let e: u64 = try!(e.parse());
         let mut elems = Vec::with_capacity(e as usize);
         for i in 1..e + 1 {
@@ -221,7 +224,7 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
         }
         Ok(elems)
     } else {
-        Err(ParseError::MissingKey("NumberOfEntries|numberofentries".to_string()))
+        Err(ParseError::MissingKey("NumberOfEntries|numberofentries|NumberOfEvents".to_string()))
     }
 }
 
