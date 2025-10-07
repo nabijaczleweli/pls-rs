@@ -213,8 +213,8 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
     // "numberofentries" http://newmedia.kcrw.com/legacy/pls/kcrwsimulcast.pls
     // "NumberOfEvents" http://www.abc.net.au/res/streaming/audio/mp3/classic_fm.pls
     if let Some(e) = play.get("NumberOfEntries").or_else(|| play.get("numberofentries")).or_else(|| play.get("NumberOfEvents")) {
-        let e: u64 = e.parse()?;
-        let mut elems = Vec::with_capacity(e as usize);
+        let e = e.parse()?;
+        let mut elems = Vec::with_capacity(e);
         for i in 1..e + 1 {
             elems.push(PlaylistElement {
                 path: play.get(&format!("File{}", i)).ok_or_else(|| ParseError::MissingKey(format!("File{}", i)))?.clone(),
