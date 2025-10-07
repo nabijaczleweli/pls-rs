@@ -199,11 +199,11 @@ pub enum ParseError {
 ///            }]);
 /// ```
 pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> {
-    let p = try!(ini::Ini::read_from(what));
-    let play = try!(p.section(Some("playlist")).ok_or(ParseError::MissingPlaylistSection));
+    let p = ini::Ini::read_from(what)?;
+    let play = p.section(Some("playlist")).ok_or(ParseError::MissingPlaylistSection)?;
 
     if let Some(v) = play.get("Version") {
-        let v = try!(v.parse());
+        let v = v.parse()?;
         if v != 2 {
             return Err(ParseError::InvalidVersion(v));
         }
@@ -213,13 +213,13 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
     // "numberofentries" http://newmedia.kcrw.com/legacy/pls/kcrwsimulcast.pls
     // "NumberOfEvents" http://www.abc.net.au/res/streaming/audio/mp3/classic_fm.pls
     if let Some(e) = play.get("NumberOfEntries").or_else(|| play.get("numberofentries")).or_else(|| play.get("NumberOfEvents")) {
-        let e: u64 = try!(e.parse());
+        let e: u64 = e.parse()?;
         let mut elems = Vec::with_capacity(e as usize);
         for i in 1..e + 1 {
             elems.push(PlaylistElement {
-                path: try!(play.get(&format!("File{}", i)).ok_or_else(|| ParseError::MissingKey(format!("File{}", i)))).clone(),
+                path: play.get(&format!("File{}", i)).ok_or_else(|| ParseError::MissingKey(format!("File{}", i)))?.clone(),
                 title: play.get(&format!("Title{}", i)).cloned(),
-                len: try!(ElementLength::parse(play.get(&format!("Length{}", i)))),
+                len: ElementLength::parse(play.get(&format!("Length{}", i)))?,
             })
         }
         Ok(elems)
@@ -265,26 +265,26 @@ pub fn parse<R: Read>(what: &mut R) -> Result<Vec<PlaylistElement>, ParseError> 
 ///             Version=2\n")
 /// ```
 pub fn write<'i, I: IntoIterator<Item = &'i PlaylistElement>, W: Write>(what: I, to: &mut W) -> io::Result<()> {
-    try!(writeln!(to, "[playlist]"));
+    writeln!(to, "[playlist]")?;
 
     let mut ent = 0u64;
     for (i, &PlaylistElement { ref path, ref title, ref len }) in what.into_iter().enumerate() {
-        try!(writeln!(to, "File{}={}", i + 1, path));
+        writeln!(to, "File{}={}", i + 1, path)?;
 
         if let Some(title) = title.as_ref() {
-            try!(writeln!(to, "Title{}={}", i + 1, title));
+            writeln!(to, "Title{}={}", i + 1, title)?;
         }
 
         if let ElementLength::Seconds(s) = *len {
-            try!(writeln!(to, "Length{}={}", i + 1, s));
+            writeln!(to, "Length{}={}", i + 1, s)?;
         }
 
-        try!(writeln!(to, ""));
+        writeln!(to, "")?;
         ent += 1;
     }
 
-    try!(writeln!(to, "NumberOfEntries={}", ent));
-    try!(writeln!(to, "Version=2"));
+    writeln!(to, "NumberOfEntries={}", ent)?;
+    writeln!(to, "Version=2")?;
 
     Ok(())
 }
@@ -297,7 +297,7 @@ impl ElementLength {
             if what == "-1" {
                 Ok(ElementLength::Unknown)
             } else {
-                Ok(ElementLength::Seconds(try!(what.parse())))
+                Ok(ElementLength::Seconds(what.parse()?))
             }
         } else {
             Ok(ElementLength::Unknown)
