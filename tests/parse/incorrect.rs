@@ -6,7 +6,7 @@ use ini::ini::Error as IniError;
 fn invalid_version() {
     assert_eq!(parse(&mut &b"[playlist]\n\
                              Version=-1\n"[..]),
-               Err(ParseError::InvalidInteger(u64::from_str_radix("-1", 10).unwrap_err())));
+               Err(ParseError::InvalidInteger("-1".parse::<u64>().unwrap_err())));
     assert_eq!(parse(&mut &b"[playlist]\n\
                              Version=0\n"[..]),
                Err(ParseError::InvalidVersion(0)));
@@ -49,7 +49,7 @@ fn missing_file_entry() {
 fn invalid_number_of_entries() {
     assert_eq!(parse(&mut &b"[playlist]\n\
                              NumberOfEntries=-1"[..]),
-               Err(ParseError::InvalidInteger(u64::from_str_radix("-1", 10).unwrap_err())));
+               Err(ParseError::InvalidInteger("-1".parse::<u64>().unwrap_err())));
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn invalid_length() {
                              Length1=Abolish the Burgeoisie!\n\
                              NumberOfEntries=1"
                                [..]),
-               Err(ParseError::InvalidInteger(u64::from_str_radix("Abolish the Burgeoisie!", 10).unwrap_err())));
+               Err(ParseError::InvalidInteger("Abolish the Burgeoisie!".parse::<u64>().unwrap_err())));
 }
 
 #[test]

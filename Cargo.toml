@@ -4,6 +4,7 @@ description = "Parser and writer for the PLS playlist format"
 documentation = "https://rawcdn.githack.com/nabijaczleweli/pls-rs/doc/pls/index.html"
 repository = "https://github.com/nabijaczleweli/pls-rs"
 readme = "README.md"
+edition = "2024"
 keywords = ["music", "playlist", "pls", "parse"]
 categories = ["parser-implementations"]
 license = "MIT"
