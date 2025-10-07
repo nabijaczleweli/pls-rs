@@ -319,6 +319,7 @@ impl From<ParseIntError> for ParseError {
 }
 
 impl ErrorT for ParseError {
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             ParseError::InvalidVersion(_) => "invalid version specified",
