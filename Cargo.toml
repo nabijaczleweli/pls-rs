@@ -8,7 +8,7 @@ keywords = ["music", "playlist", "pls", "parse"]
 categories = ["parser-implementations"]
 license = "MIT"
 # Remember to also update in appveyor.yml
-version = "0.2.2"
+version = "0.2.3"
 authors = ["nabijaczleweli <nabijaczleweli@gmail.com>",
            "Karl Rikte <karlri@axis.com>",
            "Austin Schey <aschey13@gmail.com>"]
