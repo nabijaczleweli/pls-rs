@@ -329,7 +329,7 @@ impl ErrorT for ParseError {
         }
     }
 
-    fn cause(&self) -> Option<&ErrorT> {
+    fn source(&self) -> Option<&(dyn ErrorT + 'static)> {
         match *self {
             ParseError::InvalidInteger(ref e) => Some(e),
             ParseError::Ini(ref e) => Some(e),
